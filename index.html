@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stranger Things at Christmas</title>
+    <style>
+        /* --- CSS: CUSTOM FONTS --- */
+        @font-face {
+            font-family: 'StrangerThings';
+            src: url('benguiat.ttf'); 
+        }
+
+        @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&family=Creepster&display=swap');
+
+        :root {
+            --stranger-red: #e71d36;
+            --neon-blue: #00f3ff;
+            --void-black: #050505;
+            --bulb-yellow: #ffea00;
+            --bulb-green: #39ff14;
+        }
+
+        /* GLOBAL RESET */
+        * { box-sizing: border-box; }
+
+        body {
+            background-color: var(--void-black);
+            color: #eee;
+            font-family: 'Roboto Mono', monospace;
+            margin: 0;
+            overflow: hidden; 
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            user-select: none; 
+        }
+
+        /* UI: HEALTH BAR */
+        #health-hud {
+            position: fixed;
+            top: 15px; 
+            right: 15px;
+            font-family: 'StrangerThings', serif;
+            font-size: 1.3rem; 
+            color: var(--stranger-red);
+            z-index: 1000;
+            text-shadow: 0 0 5px red;
+            display: none; 
+        }
+
+        /* EFFECTS */
+        .scanlines {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+            z-index: 999;
+        }
+
+        /* TITLE */
+        h1.logo {
+            font-family: 'StrangerThings', serif;
+            color: transparent;
+            -webkit-text-stroke: 2px var(--stranger-red);
+            font-size: 2.8rem; 
+            text-transform: uppercase;
+            text-align: center;
+            letter-spacing: -2px;
+            margin-bottom: 15px; 
+            filter: drop-shadow(0 0 5px var(--stranger-red)) drop-shadow(0 0 15px var(--stranger-red));
+            animation: breathe 4s infinite ease-in-out;
+            line-height: 1;
+            flex-shrink: 0; 
+        }
+
+        @keyframes breathe {
+            0%, 100% { filter: drop-shadow(0 0 5px var(--stranger-red)) drop-shadow(0 0 10px var(--stranger-red)); }
+            50% { filter: drop-shadow(0 0 10px var(--stranger-red)) drop-shadow(0 0 30px var(--stranger-red)); }
+        }
+
+        /* SCREENS & CONTAINERS */
+        .screen {
+            position: absolute; 
+            top: 0; left: 0;
+            width: 100%;
+            height: 100%;
+            display: none; 
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            background: var(--void-black);
+            /* TIGHTER PADDING overall */
+            padding: 15px 15px 50px 15px; 
+        }
+        
+        .active { display: flex; }
+
+        /* SETTING CARD */
+        .setting-card {
+            border: 3px solid var(--stranger-red);
+            background: rgba(20, 0, 0, 0.8);
+            padding: 8px; 
+            border-radius: 10px;
+            box-shadow: 0 0 25px var(--stranger-red);
+            text-align: center;
+            max-width: 90%;
+            max-height: 65vh; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .setting-card img {
+            max-width: 100%;
+            max-height: 50vh; 
+            width: auto; 
+            height: auto;
+            object-fit: contain;
+            border-radius: 5px;
+            border: 2px solid #550000;
+        }
+
+        /* CAROUSEL STYLES */
+        #carousel-image {
+            max-height: 65vh;
+            max-width: 90%;
+            border: 4px solid var(--stranger-red);
+            box-shadow: 0 0 30px var(--stranger-red);
+            opacity: 0; 
+            transition: opacity 0.5s ease-in-out;
+        }
+        .fade-in-image { opacity: 1 !important; }
+
+        /* --- DIALOGUE BOX (COMPACT) --- */
+        .dialogue-box {
+            border: 2px solid var(--neon-blue);
+            background: rgba(0, 15, 30, 0.95);
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            box-shadow: 0 0 15px var(--neon-blue);
+            text-align: left;
+            min-height: 80px; 
+            width: 85%; max-width: 900px; 
+            font-size: 1rem; 
+            position: relative;
+        }
+
+        .character-name {
+            color: var(--neon-blue);
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-bottom: 3px; 
+            display: block;
+            text-shadow: 0 0 5px var(--neon-blue);
+        }
+
+        /* Tighter lists in dialogue boxes */
+        .dialogue-box ul {
+            margin-top: 5px;
+            margin-bottom: 5px;
+            padding-left: 20px;
+        }
+        .dialogue-box li {
+            margin-bottom: 2px;
+            line-height: 1.3;
+        }
+
+        /* BUTTONS (COMPACT) */
+        button {
+            background: transparent;
+            border: 2px solid #fff;
+            color: #fff;
+            padding: 10px 25px;
+            font-family: 'StrangerThings', serif;
+            font-size: 1.3rem; 
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: 0.2s;
+            margin-top: 15px; 
+            letter-spacing: 1px;
+            flex-shrink: 0; 
+        }
+        
+        button:hover {
+            background: var(--stranger-red);
+            border-color: var(--stranger-red);
+            box-shadow: 0 0 20px var(--stranger-red);
+            text-shadow: 0 0 5px #fff;
+        }
+
+        /* LEVEL 1: LOGIC GRID */
+        .logic-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px; 
+            margin: 15px 0; 
+            width: 85%; max-width: 900px;
+            flex-shrink: 0;
+        }
+        .grid-item {
+            border: 1px solid #555;
+            padding: 15px 5px; 
+            cursor: pointer;
+            background: #1a1a1a;
+            text-align: center;
+            font-family: 'StrangerThings', serif;
+            font-size: 0.9rem; 
+            transition: 0.2s;
+        }
+
+        /* LEVEL 2 & 4 HUD */
+        .arcade-hud, .scramble-hud {
+            display: flex;
+            justify-content: space-between;
+            width: 85%; max-width: 900px;
+            font-family: 'Creepster', cursive;
+            color: gold;
+            font-size: 1.3rem;
+            margin-bottom: 8px; 
+            flex-shrink: 0;
+        }
+
+        /* --- ARCADE QUESTION BOX (COMPACT) --- */
+        #arcade-question-box {
+             width: 85%; max-width: 900px;
+             background: #111; 
+             padding: 15px; 
+             border: 2px solid lime; 
+             font-family: 'Courier New', monospace; 
+             color: lime; 
+             text-align: left; 
+             box-shadow: 0 0 10px lime;
+        }
+
+
+        /* LEVEL 4: SCRAMBLE UI */
+        .word-bank {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px; 
+            margin-top: 15px;
+            width: 85%; max-width: 900px;
+        }
+        .scramble-slot {
+            display: inline-block;
+            border-bottom: 2px solid white;
+            min-width: 40px; 
+            margin: 0 4px;
+            color: var(--neon-blue);
+            font-weight: bold;
+        }
+
+        /* FOOTER */
+        footer {
+            position: fixed;
+            bottom: 8px;
+            width: 100%;
+            text-align: center;
+            font-family: 'StrangerThings', serif;
+            color: #888;
+            font-size: 0.8rem;
+            text-shadow: 0 0 2px black;
+            z-index: 1000;
+        }
+
+        /* FADE TRANSITION */
+        .fade-out {
+            opacity: 0;
+            transition: opacity 1s ease;
+        }
+
+        .shake { animation: shake 0.5s; }
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            80% { transform: translate(-1px, -1px) rotate(1deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        }
+
+        #red-flash {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: #a00;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 998;
+            transition: opacity 0.1s;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="scanlines"></div>
+    <div id="red-flash"></div>
+
+    <div id="health-hud">
+        LIVES: <span id="lives-display">❤️❤️❤️</span>
+    </div>
+
+    <div id="setting-screen" class="screen active">
+        <h1 class="logo">STRANGER THINGS<br>AT CHRISTMAS</h1>
+        <div class="setting-card">
+            <img src="setting.png" alt="The Upside Down at Christmas">
+        </div>
+        <button onclick="showNarrative()">Welcome to the Upside Down</button>
+    </div>
+
+    <div id="narrative-screen" class="screen">
+        <h1 class="logo">STRANGER THINGS<br>AT CHRISTMAS</h1>
+        <p style="color: #bbb; max-width: 600px; text-align: center; margin-top: 10px; line-height: 1.4; font-family: 'Roboto Mono', monospace; font-size: 0.95rem;">
+            HAWKINS, CHRISTMAS EVE, 1984.<br><br>
+            The town is decorated for the holidays, but the Upside Down is bleeding through. The Demogorgon hates the warmth and light of Christmas and has corrupted the decorations.<br><br>
+            You must use the holiday lights to communicate and fight back before Christmas is frozen forever.<br><br>
+            <span style="color:var(--stranger-red)">Volume ON recommended.</span>
+        </p>
+        <button onclick="startGame()">ENTER THE VOID</button>
+    </div>
+
+    <div id="carousel-screen" class="screen">
+        <img id="carousel-image" src="" alt="Character Sequence">
+    </div>
+
+    <div id="level-1" class="screen">
+        <h1 class="logo" style="font-size: 2.2rem;">CHAPTER 1:<br>THE LIGHTS</h1>
+        
+        <div class="dialogue-box">
+            <span class="character-name">MIKE:</span>
+            "Will is sending a code! Read the clues and set the correct colors on the wall!"<br>
+            <span class="character-name" style="color:#eee; margin-top: 5px;">CLUES:</span>
+            <ul style="color:#ccc;">
+                <li>The <span style="color:var(--bulb-green)">GREEN</span> light is in the last socket (Position 4).</li>
+                <li>The <span style="color:var(--bulb-yellow)">YELLOW</span> light is immediately next to the Green light.</li>
+                <li>The <span style="color:var(--stranger-red)">RED</span> light is exactly between the Blue and Yellow lights.</li>
+            </ul>
+        </div>
+
+        <div class="logic-grid" id="bulb-container">
+            <div class="grid-item" id="slot-1" onclick="cycleColor(1)" style="color: #555;">[CLICK]</div>
+            <div class="grid-item" id="slot-2" onclick="cycleColor(2)" style="color: #555;">[CLICK]</div>
+            <div class="grid-item" id="slot-3" onclick="cycleColor(3)" style="color: #555;">[CLICK]</div>
+            <div class="grid-item" id="slot-4" onclick="cycleColor(4)" style="color: #555;">[CLICK]</div>
+        </div>
+
+        <button onclick="checkLevel1()">CONNECT</button>
+        <p id="msg-1" style="min-height: 20px; color: var(--stranger-red); font-weight: bold; margin-top:10px; font-family:'StrangerThings', serif; font-size:1.5rem;"></p>
+    </div>
+
+    <div id="level-2" class="screen">
+        <h1 class="logo" style="font-size: 2.2rem;">CHAPTER 2:<br>ARCADE ATTACK</h1>
+        
+        <div class="arcade-hud">
+            <div>BOSS: DEMOGORGON</div>
+            <div id="boss-hp">HP: 5/5</div>
+        </div>
+
+        <div class="dialogue-box" style="min-height: auto;">
+            <span class="character-name">DUSTIN:</span>
+            "The Demogorgon is blocking the screen! We need to hit it with 5 correct answers in a row!"
+        </div>
+
+        <div id="arcade-question-box">
+            </div>
+        
+        <p id="msg-2" style="min-height: 20px; color: var(--stranger-red); font-weight: bold; margin-top:10px; font-family:'StrangerThings', serif; font-size:1.5rem;"></p>
+    </div>
+
+    <div id="level-3" class="screen">
+        <h1 class="logo" style="font-size: 2.2rem;">CHAPTER 3:<br>CLOSE THE GATE</h1>
+        
+        <div class="dialogue-box" style="min-height: auto;">
+            <span class="character-name">ELEVEN:</span>
+            "The gate is growing... I need to find 5 opposites to seal it completely."
+        </div>
+
+        <div id="vocab-container" style="width:100%; text-align: center; margin-top: 15px;">
+            </div>
+
+        <p id="msg-3" style="min-height: 20px; color: var(--stranger-red); font-weight: bold; margin-top:10px; font-family:'StrangerThings', serif; font-size:1.5rem;"></p>
+    </div>
+
+    <div id="level-4" class="screen">
+        <h1 class="logo" style="font-size: 2.2rem;">CHAPTER 4:<br>THE RUSSIAN BASE</h1>
+        
+        <div class="scramble-hud" style="color: var(--neon-blue);">
+            <div>DECODE MESSAGE</div>
+            <div id="scramble-progress">1/3</div>
+        </div>
+
+        <div class="dialogue-box" style="min-height: auto;">
+            <span class="character-name">HOPPER:</span>
+            "We intercepted Russian transmissions. They are split into three parts. Unscramble them to open the safe!"
+        </div>
+
+        <div style="margin: 15px; font-size: 1.3rem; min-height: 35px; border-bottom: 1px solid #333; width: 85%; max-width: 900px;" id="scramble-answer-area">
+            </div>
+
+        <div class="word-bank" id="scramble-bank">
+            </div>
+
+        <div style="margin-top:15px;">
+            <button onclick="resetScramble()" style="font-size:1rem; border-color:#555; color:#aaa; margin-right:10px; padding: 8px 20px;">RESET</button>
+            <button onclick="checkLevel4()" style="font-size:1rem; padding: 8px 20px;">DECODE</button>
+        </div>
+        
+        <p id="msg-4" style="min-height: 20px; color: var(--stranger-red); font-weight: bold; margin-top:10px; font-family:'StrangerThings', serif; font-size:1.3rem;"></p>
+    </div>
+
+    <div id="fail-screen" class="screen" style="background:black; z-index:2000;">
+        <h1 class="logo" style="color: red; -webkit-text-stroke: 2px red;">YOU DIED</h1>
+        <p style="font-size: 1.5rem;">The Upside Down took you.</p>
+        <button onclick="restartCurrentLevel()">TRY AGAIN</button>
+    </div>
+
+    <div id="win-screen" class="screen">
+        <h1 class="logo">CHRISTMAS<br>IS SAVED</h1>
+        <p style="font-family:'Roboto Mono', monospace; margin-top: 20px;">The gate is closed. The lights are shining. Hawkins is safe... for now.</p>
+        <button onclick="location.reload()">PLAY AGAIN</button>
+    </div>
+
+    <footer>
+        🎄✍ Created by Panagiotis Domvros, English and Drama Teacher, All Rights Reserved ✍🎅
+    </footer>
+
+    <script>
+        // --- ASSETS ---
+        const audioWrong = new Audio('audio.mp3'); 
+        const audioMain = new Audio('main.mp3'); 
+        audioMain.volume = 0.6;
+
+        // --- CAROUSEL DATA ---
+        const carouselImages = ['lucas.png', 'mike.png', 'will.png', 'eleven.png', 'dustin.png', 'jonathan.png', 'nancy.png', 'demogorgon.png'];
+        let carouselIndex = 0;
+
+        // --- GAME STATE ---
+        let currentLives = 3;
+        let currentLevelId = 'level-1'; 
+        
+        // Level 1 Data
+        const colors = ["BLUE", "RED", "GREEN", "YELLOW"];
+        let slots = [0, 0, 0, 0]; 
+        
+        // Level 2 Data (5 Qs)
+        const arcadeQuestions = [
+            { q: "1. I ______ (watch) TV when the lights went out.", opts: ["watched", "was watching"], ans: "was watching" },
+            { q: "2. The Demogorgon ______ be hungry! It's screaming!", opts: ["must", "can't"], ans: "must" },
+            { q: "3. If we don't hurry, we ______ trapped here.", opts: ["will be", "would be"], ans: "will be" },
+            { q: "4. By the time Eleven arrived, the monster ______.", opts: ["had left", "has left"], ans: "had left" },
+            { q: "5. Nancy is the girl ______ brother disappeared.", opts: ["who", "whose"], ans: "whose" }
+        ];
+        let arcadeStage = 0;
+
+        // Level 3 Data (5 Vocab)
+        const vocabChallenges = [
+            { target: "ANCIENT", opts: ["Modern", "Old", "Dusty"], ans: "Modern" },
+            { target: "VANISH", opts: ["Disappear", "Appear", "Run"], ans: "Appear" },
+            { target: "MISERABLE", opts: ["Sad", "Joyful", "Angry"], ans: "Joyful" },
+            { target: "TEMPORARY", opts: ["Permanent", "Short", "Brief"], ans: "Permanent" },
+            { target: "COWARDLY", opts: ["Afraid", "Brave", "Weak"], ans: "Brave" }
+        ];
+        let vocabStage = 0;
+
+        // --- LEVEL 4 DATA (3 Sentences - UPDATED) ---
+        const scrambleData = [
+            { correct: ["THE", "GATE", "IS", "OPENING"], mixed: ["OPENING", "IS", "THE", "GATE"] },
+            { correct: ["DEMOGORGONS", "ARE", "COMING", "THROUGH"], mixed: ["COMING", "DEMOGORGONS", "THROUGH", "ARE"] },
+            { correct: ["CLOSE", "THE", "GATE", "BEFORE", "CHRISTMAS"], mixed: ["BEFORE", "CLOSE", "CHRISTMAS", "GATE", "THE"] }
+        ];
+        let scrambleStage = 0;
+        let scrambleUserBuild = [];
+
+        // --- FUNCTIONS ---
+
+        // Transition from Setting Card to Narrative
+        function showNarrative() {
+            const settingScreen = document.getElementById('setting-screen');
+            settingScreen.classList.add('fade-out');
+            setTimeout(() => {
+                settingScreen.classList.remove('active');
+                settingScreen.classList.remove('fade-out'); 
+                document.getElementById('narrative-screen').classList.add('active');
+            }, 1000); 
+        }
+
+        // Start Game flow from Narrative screen
+        function startGame() {
+            // 1. Start Music
+            audioMain.currentTime = 0;
+            audioMain.play().catch(e => console.log("Main Audio error", e));
+
+            // 2. Hide Narrative, Show Carousel container
+            const narrativeScreen = document.getElementById('narrative-screen');
+            narrativeScreen.classList.add('fade-out');
+            setTimeout(() => {
+                narrativeScreen.classList.remove('active');
+                narrativeScreen.classList.remove('fade-out');
+                document.getElementById('carousel-screen').classList.add('active');
+                // 3. Start sequence
+                runCarousel();
+            }, 1000); 
+        }
+
+        function runCarousel() {
+            if (carouselIndex < carouselImages.length) {
+                const imgElement = document.getElementById('carousel-image');
+                // Set source
+                imgElement.src = carouselImages[carouselIndex];
+                
+                // Slight delay to ensure src loads before fading in
+                setTimeout(() => imgElement.classList.add('fade-in-image'), 50);
+
+                // Wait 2 seconds, then fade out
+                setTimeout(() => {
+                    imgElement.classList.remove('fade-in-image');
+                    // Wait for CSS transition (0.5s) before swapping next image
+                    setTimeout(() => {
+                        carouselIndex++;
+                        runCarousel();
+                    }, 500);
+                }, 2000); // How long image stays visible
+            } else {
+                endCarousel();
+            }
+        }
+
+        function endCarousel() {
+             // Fade music out
+             fadeAudio(audioMain);
+             // Hide carousel screen
+             document.getElementById('carousel-screen').classList.remove('active');
+             // Show Health UI
+             document.getElementById('health-hud').style.display = 'block';
+             // Start Game
+             enterLevel('level-1');
+        }
+
+
+        function enterLevel(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            currentLevelId = id;
+            currentLives = 3;
+            updateLivesDisplay();
+            
+            if(id === 'level-2') { arcadeStage = 0; loadArcadeQuestion(); }
+            if(id === 'level-3') { vocabStage = 0; loadVocab(); }
+            // Reset Level 4 specific state
+            if(id === 'level-4') { 
+                scrambleStage = 0; 
+                updateScrambleProgress();
+                resetScramble(); 
+            }
+        }
+
+        function updateLivesDisplay() {
+            let hearts = "";
+            for(let i=0; i<currentLives; i++) hearts += "❤️";
+            document.getElementById('lives-display').innerText = hearts;
+        }
+
+        function loseLife() {
+            currentLives--;
+            updateLivesDisplay();
+            triggerShake();
+            if(currentLives <= 0) {
+                setTimeout(() => {
+                    document.getElementById('fail-screen').classList.add('active');
+                }, 500);
+            }
+        }
+
+        function restartCurrentLevel() {
+            document.getElementById('fail-screen').classList.remove('active');
+            enterLevel(currentLevelId);
+        }
+
+        function fadeAudio(audio) {
+            let fadeInterval = setInterval(() => {
+                if (audio.volume > 0.05) audio.volume -= 0.05;
+                else { audio.pause(); clearInterval(fadeInterval); }
+            }, 200);
+        }
+
+        function triggerShake() {
+            audioWrong.currentTime = 0; 
+            audioWrong.play().catch(e => console.log("Audio error", e));
+            document.body.classList.add('shake');
+            setTimeout(() => document.body.classList.remove('shake'), 500);
+            const flash = document.getElementById('red-flash');
+            flash.style.opacity = '0.4';
+            setTimeout(() => flash.style.opacity = '0', 200);
+        }
+
+        // --- LEVEL 1 LOGIC ---
+        function cycleColor(slotNum) {
+            const index = slotNum - 1;
+            slots[index]++;
+            if(slots[index] >= colors.length) slots[index] = 0;
+            const el = document.getElementById(`slot-${slotNum}`);
+            const colName = colors[slots[index]];
+            el.innerText = colName;
+            
+            let cssColor = '#fff';
+            if(colName === "BLUE") cssColor = "#00f3ff";
+            if(colName === "RED") cssColor = "#e71d36";
+            if(colName === "GREEN") cssColor = "#39ff14";
+            if(colName === "YELLOW") cssColor = "#ffea00";
+
+            el.style.color = cssColor;
+            el.style.borderColor = cssColor;
+            el.style.boxShadow = `0 0 10px ${cssColor}`;
+        }
+
+        function checkLevel1() {
+            const s1 = document.getElementById('slot-1').innerText;
+            const s2 = document.getElementById('slot-2').innerText;
+            const s3 = document.getElementById('slot-3').innerText;
+            const s4 = document.getElementById('slot-4').innerText;
+
+            // Logic: Green=4, Yellow=3 (next to green), Red=2 (between Blue and Yellow), Blue=1
+            if (s1 === "BLUE" && s2 === "RED" && s3 === "YELLOW" && s4 === "GREEN") {
+                 enterLevel('level-2');
+            } else {
+                document.getElementById('msg-1').innerText = "WRONG CODE!";
+                loseLife();
+            }
+        }
+
+        // --- LEVEL 2 LOGIC ---
+        function loadArcadeQuestion() {
+            const qBox = document.getElementById('arcade-question-box');
+            if(arcadeStage < arcadeQuestions.length) {
+                const q = arcadeQuestions[arcadeStage];
+                // COMPACT CSS for buttons inside JS
+                let html = `> STAGE ${arcadeStage+1}/5<br><br>${q.q}<br><div style="display:flex; justify-content:center; gap:10px; margin-top:15px; flex-wrap:wrap;">`;
+                q.opts.forEach(opt => {
+                    html += `<button onclick="checkLevel2('${opt}')" style="font-size: 0.9rem; padding: 8px 15px; border-color: lime; color: lime; font-family:'Courier New', monospace; text-shadow:none; box-shadow:none; margin-top:0;">${opt}</button>`;
+                });
+                html += `</div>`;
+                qBox.innerHTML = html;
+                document.getElementById('boss-hp').innerText = `HP: ${5 - arcadeStage}/5`;
+            } else {
+                enterLevel('level-3');
+            }
+        }
+
+        function checkLevel2(ans) {
+            const correct = arcadeQuestions[arcadeStage].ans;
+            if(ans === correct) {
+                arcadeStage++;
+                loadArcadeQuestion();
+            } else {
+                document.getElementById('msg-2').innerText = "HIT TAKEN!";
+                loseLife();
+            }
+        }
+
+        // --- LEVEL 3 LOGIC ---
+        function loadVocab() {
+            const vContainer = document.getElementById('vocab-container');
+            if(vocabStage < vocabChallenges.length) {
+                const v = vocabChallenges[vocabStage];
+                let html = `
+                <div style="text-align:center; margin-bottom:15px;">
+                    <div style="font-size: 1.8rem; font-family: 'StrangerThings', serif; color: var(--stranger-red);">RIFT ${vocabStage+1}/5: ${v.target}</div>
+                    <div style="margin-top: 10px;">
+                `;
+                v.opts.forEach(opt => {
+                    // COMPACT CSS for buttons inside JS
+                    html += `<button onclick="checkLevel3('${opt}')" style="font-size: 1rem; margin:0 8px; padding: 8px 20px;">${opt}</button>`;
+                });
+                html += `</div></div>`;
+                vContainer.innerHTML = html;
+            } else {
+                enterLevel('level-4');
+            }
+        }
+
+        function checkLevel3(ans) {
+            const correct = vocabChallenges[vocabStage].ans;
+            if(ans === correct) {
+                vocabStage++;
+                loadVocab();
+            } else {
+                document.getElementById('msg-3').innerText = "RIFT UNSTABLE!";
+                loseLife();
+            }
+        }
+
+        // --- LEVEL 4 LOGIC (3 Sentences) ---
+        function updateScrambleProgress() {
+             document.getElementById('scramble-progress').innerText = `${scrambleStage + 1}/3`;
+        }
+
+        function resetScramble() {
+            scrambleUserBuild = [];
+            renderScramble();
+            document.getElementById('msg-4').innerText = "";
+        }
+
+        function renderScramble() {
+            // Get current mixed sentence based on stage
+            const currentMixed = scrambleData[scrambleStage].mixed;
+
+            const ansArea = document.getElementById('scramble-answer-area');
+            ansArea.innerHTML = scrambleUserBuild.map(w => `<span class="scramble-slot">${w}</span>`).join(" ");
+
+            const bankArea = document.getElementById('scramble-bank');
+            bankArea.innerHTML = "";
+            
+            currentMixed.forEach(word => {
+                // Count occurrences to handle duplicate words if any
+                const totalInBank = currentMixed.filter(w => w === word).length;
+                const usedCount = scrambleUserBuild.filter(w => w === word).length;
+                
+                if(usedCount < totalInBank) {
+                    const btn = document.createElement('button');
+                    btn.innerText = word;
+                    // COMPACT CSS for JS buttons
+                    btn.style.margin = "4px";
+                    btn.style.padding = "8px 15px";
+                    btn.style.fontSize = "0.9rem";
+                    btn.style.marginTop = "0";
+                    btn.onclick = () => { scrambleUserBuild.push(word); renderScramble(); };
+                    bankArea.appendChild(btn);
+                }
+            });
+        }
+
+        function checkLevel4() {
+            const attempt = scrambleUserBuild.join(" ");
+            // Get current correct sentence based on stage
+            const target = scrambleData[scrambleStage].correct.join(" ");
+            
+            const msg = document.getElementById('msg-4');
+            const greenColor = getComputedStyle(document.documentElement).getPropertyValue('--bulb-green').trim();
+            const redColor = getComputedStyle(document.documentElement).getPropertyValue('--stranger-red').trim();
+
+            if(attempt === target) {
+                // Correct!
+                msg.style.color = greenColor;
+                msg.innerText = "SIGNAL DECODED!";
+                scrambleStage++;
+
+                if(scrambleStage < scrambleData.length) {
+                    // Move to next sentence after short delay
+                    setTimeout(() => {
+                         updateScrambleProgress();
+                         resetScramble();
+                    }, 1000);
+                } else {
+                    // All 3 done - WIN!
+                    setTimeout(() => {
+                        enterLevel('win-screen');
+                    }, 1000);
+                }
+
+            } else {
+                // Incorrect
+                msg.style.color = redColor;
+                msg.innerText = "INCORRECT CODE!";
+                loseLife();
+                setTimeout(() => {
+                     msg.innerText = "";
+                     resetScramble();
+                }, 1000);
+            }
+        }
+
+    </script>
+</body>
+</html>
